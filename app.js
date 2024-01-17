@@ -8,7 +8,7 @@ const MySQLStore = require("express-mysql-session")(session);
 const config = require("./config");
 
 const app = express();
-const PORT = process.env.PORT || 3360;
+const PORT = process.env.PORT || 3306;
 
 // Use express-mysql-session for session storage
 const sessionStore = new MySQLStore(
