@@ -1,0 +1,241 @@
+const express = require("express");
+const session = require("express-session");
+const bodyParser = require("body-parser");
+const bcrypt = require("bcryptjs");
+const http = require("http");
+const mysql = require("mysql");
+const MySQLStore = require("express-mysql-session")(session);
+const config = require("./config");
+
+const app = express();
+const PORT = process.env.PORT || 3360;
+
+// Use express-mysql-session for session storage
+const sessionStore = new MySQLStore(
+  config.session,
+  mysql.createConnection(config.database)
+);
+
+app.use(
+  session({
+    secret: config.session.secret,
+    resave: true,
+    saveUninitialized: true,
+    store: sessionStore, // Use the MySQL session store
+  })
+);
+
+app.set("view engine", "ejs");
+app.set("views", __dirname + "/views");
+
+const db = mysql.createConnection(config.database);
+db.connect();
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(express.static("public"));
+
+// Middleware to check if the user is authenticated
+const isAuthenticated = (req, res, next) => {
+  const allowedRoutes = ["/login", "/signup"]; // Add '/signup' to the allowed routes
+
+  if (req.session.userId || allowedRoutes.includes(req.path)) {
+    next();
+  } else {
+    res.redirect("/login");
+  }
+};
+
+// Routes
+app.get("/", isAuthenticated, (req, res) => {
+  // Fetch tasks for the logged-in user
+  db.query(
+    "SELECT * FROM tasks WHERE user_id = ?",
+    [req.session.userId],
+    (err, tasks) => {
+      if (err) throw err;
+      res.render("index", { tasks });
+    }
+  );
+});
+
+app.get("/tasks", isAuthenticated, (req, res) => {
+  // Fetch tasks for the logged-in user
+  db.query(
+    "SELECT * FROM tasks WHERE user_id = ?",
+    [req.session.userId],
+    (err, tasks) => {
+      if (err) {
+        console.error("Error fetching tasks:", err);
+        res
+          .status(500)
+          .json({ success: false, message: "Error fetching tasks" });
+      } else {
+        res.json(tasks);
+      }
+    }
+  );
+});
+
+// Login from the server side
+app.get("/login", (req, res) => {
+  // Render login page without an error message initially
+  res.render("login", { errorMessage: null });
+});
+
+app.post("/login", (req, res) => {
+  const { username, password } = req.body;
+  db.query(
+    "SELECT * FROM users WHERE username = ?",
+    [username],
+    (err, results) => {
+      if (err) {
+        console.error("Error checking username existence:", err);
+        // Render login page with an error message
+        res.render("login", {
+          errorMessage: "Error checking username existence",
+        });
+      } else if (results.length > 0) {
+        const user = results[0];
+        bcrypt.compare(password, user.password, (bcryptErr, match) => {
+          if (bcryptErr) {
+            console.error("Error comparing passwords:", bcryptErr);
+            // Render login page with an error message
+            res.render("login", { errorMessage: "Error comparing passwords" });
+          } else if (match) {
+            req.session.userId = user.id;
+            res.redirect("/");
+          } else {
+            // Render login page with an error message for incorrect username or password
+            res.render("login", {
+              errorMessage: "Invalid username or password",
+            });
+          }
+        });
+      } else {
+        // Render login page with an error message for user not found
+        res.render("login", {
+          errorMessage: "Username or Password not found. Please try again!",
+        });
+      }
+    }
+  );
+});
+
+// Add a function to validate password complexity
+function validatePassword(password) {
+  const passwordPattern = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+  return password.match(passwordPattern);
+}
+
+// Signup from the server side
+app.get("/signup", (req, res) => {
+  // Render signup page without an error message initially
+  res.render("signup", { errorMessage: null });
+});
+
+app.post("/signup", (req, res) => {
+  const { username, password } = req.body;
+
+  // Check if the username already exists
+  db.query(
+    "SELECT * FROM users WHERE username = ?",
+    [username],
+    (err, results) => {
+      if (err) {
+        console.error("Error checking username existence:", err);
+        // Render signup page with an error message
+        return res.render("signup", {
+          errorMessage: "Error checking username existence",
+        });
+      }
+
+      if (results.length > 0) {
+        // Username already exists
+        // Render signup page with an error message
+        return res.render("signup", {
+          errorMessage: "Username or Password already taken",
+        });
+      }
+
+      // Validate password complexity
+      const isPasswordValid = validatePassword(password);
+      if (!isPasswordValid) {
+        return res.render("signup", {
+          errorMessage:
+            "Invalid password. Password must be at least 8 characters long and include both letters and numbers.",
+        });
+      }
+
+      // If the username is unique and the password is valid, proceed with user creation
+      bcrypt.hash(password, 10, (hashErr, hash) => {
+        if (hashErr) {
+          console.error("Error hashing password:", hashErr);
+          // Render signup page with an error message
+          return res.render("signup", {
+            errorMessage: "Error hashing password",
+          });
+        }
+
+        db.query(
+          "INSERT INTO users (username, password) VALUES (?, ?)",
+          [username, hash],
+          (insertErr) => {
+            if (insertErr) {
+              console.error("Error inserting new user:", insertErr);
+              // Render signup page with an error message
+              return res.render("signup", {
+                errorMessage: "Error inserting new user",
+              });
+            }
+
+            // User successfully created
+            return res.redirect("/login");
+          }
+        );
+      });
+    }
+  );
+});
+
+// End of Signup from the server side
+
+app.post("/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.redirect("/login");
+  });
+});
+
+app.post("/add-task", isAuthenticated, (req, res) => {
+  const { taskDescription } = req.body;
+  db.query(
+    "INSERT INTO tasks (user_id, task_description) VALUES (?, ?)",
+    [req.session.userId, taskDescription],
+    (err, result) => {
+      if (err) throw err;
+      // Send the inserted task as a response
+      res.json({
+        success: true,
+        task: { id: result.insertId, task_description: taskDescription },
+      });
+    }
+  );
+});
+
+app.delete("/tasks/:id", isAuthenticated, (req, res) => {
+  const taskId = req.params.id;
+  db.query("DELETE FROM tasks WHERE id = ?", [taskId], (err) => {
+    if (err) {
+      console.error("Error removing task:", err);
+      res.status(500).json({ success: false, message: "Error removing task" });
+    } else {
+      res.json({ success: true, message: "Task removed successfully" });
+    }
+  });
+});
+
+const server = http.createServer(app);
+
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});

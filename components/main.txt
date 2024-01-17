@@ -1,0 +1,211 @@
+
+// console.log('main.js loaded');
+function togglePasswordVisibility() {
+  var passwordInput = document.getElementById('password');
+  var passwordToggle = document.querySelector('.password-toggle');
+  if (passwordInput.type === 'password') {
+    passwordInput.type = 'text';
+    passwordToggle.style.backgroundImage = "url('/img/hide.png')";
+  } else {
+    passwordInput.type = 'password';
+    passwordToggle.style.backgroundImage = "url('/img/eye.png')";
+  }
+}
+
+// Password Strength Functionality
+
+// The DOM 
+document.addEventListener('DOMContentLoaded', function() {
+  const taskList = document.getElementById('taskList');
+  const addTaskForm = document.getElementById('addTaskForm');
+  const loginForm = document.getElementById('loginForm');
+  const errorMessageContainer = document.getElementById('login-error-message');
+
+  // Fetch tasks from the server when the page loads
+  fetch('/tasks')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tasks. Status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(tasks => {
+      tasks.forEach(task => addTask(task));
+    })
+    .catch(error => console.error('Error fetching tasks:', error));
+
+  // Function to add a new task
+  function addTask(task) {
+    const listItem = document.createElement('li');
+    listItem.textContent = task.task_description;
+
+    const deleteButton = document.createElement('button');
+    deleteButton.innerHTML = `<i class="fa-solid fa-trash-can"></i>`;
+    deleteButton.addEventListener('click', function() {
+      removeTask(task.id);
+    });
+
+    listItem.appendChild(deleteButton);
+    listItem.dataset.taskId = task.id;  // Set a custom data attribute to identify the task
+    taskList.appendChild(listItem);
+  }
+
+  // Function to remove a task
+  function removeTask(taskId) {
+    fetch(`/tasks/${taskId}`, {
+      method: 'DELETE',
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to remove task. Status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(response => {
+        if (response.success) {
+          // If the server successfully removes the task, remove it from the UI
+          const taskItem = document.querySelector(`li[data-task-id="${taskId}"]`);
+          taskItem.remove();
+        } else {
+          console.error('Error removing task on the server:', response.message);
+        }
+      })
+      .catch(error => console.error('Error removing task on the server:', error));
+  }
+
+  // Event listener for form submission
+  addTaskForm.addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const taskDescription = document.getElementById('taskDescription').value;
+    if (taskDescription.trim() !== '') {
+      sendTaskToServer(taskDescription);
+    }
+
+    document.getElementById('taskDescription').value = '';
+  });
+
+  // Function to add a new task to the server
+  function sendTaskToServer(taskDescription) {
+    fetch('/add-task', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ taskDescription }),
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to add task. Status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(response => {
+        if (!response.success) {
+          console.error('Error adding task on the server:', response.message);
+        } else {
+          // If the server successfully adds the task, add it to the UI
+          addTask(response.task);
+        }
+      })
+      .catch(error => console.error('Error adding task on the server:', error));
+  }
+
+  // Event listener for login form submission
+  loginForm.addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    // Send login credentials to the server
+    fetch('/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, password }),
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to login. Status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(response => {
+        if (!response.success) {
+          // If login is unsuccessful, display the error message
+          errorMessageContainer.textContent = response.message;
+        } else {
+          // If login is successful, redirect or perform other actions
+          window.location.href = '/';
+        }
+      })
+      .catch(error => console.error('Error logging in:', error));
+  });
+
+  // Add an event listener to the password toggle button
+  const passwordToggle = document.querySelector('.password-toggle');
+  if (passwordToggle) {
+    passwordToggle.addEventListener('click', togglePasswordVisibility);
+  } else {
+    console.error('Password toggle button not found.');
+  }
+
+});
+
+
+var userInput = document.getElementById('username');
+var passInput = document.getElementById('password');
+var userError = document.getElementById('user-error');
+var passError = document.getElementById('pass-error');
+var btnSubmit = document.getElementById('btn-submit');
+
+userInput.addEventListener('input', validateUsername);
+passInput.addEventListener('input', validatePassword);
+
+function validateUsername(){
+  var username = userInput.value;
+  var usernameRegex =/^[a-z]{13,14}(?:.*[0-9]){0,2}$/;
+
+  if(!username.match(usernameRegex)){
+    userError.innerHTML = ` 
+    <div class="alert alert-warning" role="alert">
+      <p>Invalid Username.</p>
+    </div>`;
+    userError.classList.remove('valid');
+    userError.classList.add('error');
+    btnSubmit.disabled = true;
+  }else{
+    userError.innerHTML = `
+    <div class="alert alert-success" role="alert">
+       <p>Valid Username</p>
+    </div>`;
+    userError.classList.remove('error');
+    userError.classList.add('valid');
+    btnSubmit.disabled = !passError.classList.contains('valid');
+  }
+}
+
+function validatePassword(){
+  var password = passInput.value;
+  var passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+
+  if(!password.match(passwordRegex)){
+    passError.innerHTML = ` 
+    <div class="alert alert-warning" role="alert">
+      <p>Invalid Password Format</p>
+    </div>`;
+    passError.classList.remove('valid');
+    passError.classList.add('error');
+    btnSubmit.disabled = true;
+  }else{
+    passError.innerHTML = ` 
+    <div class="alert alert-success" role="alert">
+      <p>Valid Password</p>
+    </div>`;
+    passError.classList.remove('error');
+    passError.classList.add('valid');
+    btnSubmit.disabled = !userError.classList.contains('valid');
+  }
+}

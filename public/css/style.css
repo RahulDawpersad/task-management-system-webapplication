@@ -1,0 +1,230 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Caveat+Brush&display=swap");
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  overflow: auto;
+}
+
+#app {
+  /* text-align: center; */
+  display: grid;
+  place-items: center;
+  /* margin-top: -2em; */
+  /* margin: 2em 0; */
+  height: 100vh;
+}
+
+.form {
+  display: grid;
+  place-items: center;
+}
+
+.form h1 {
+  font-family: "Caveat Brush", cursive;
+  font-size: 2.5em;
+  margin: 1em 0;
+}
+
+.form input {
+  /* background: #9e9696; */
+  text-align: center;
+  width: 21em;
+  height: 3em;
+  outline: 0;
+  border: none;
+  border-bottom: 2px solid #000;
+  margin: 1.8em 0;
+  transition: 0.2s ease;
+}
+
+.form input:focus {
+  width: 23em;
+  border-bottom: 2px solid #009df8;
+}
+
+.form button {
+  /* margin-top: 10px; */
+  background: #dbdada;
+  width: 21em;
+  height: 3em;
+  margin: 1.2em 0;
+  border: none;
+  border-radius: 10px;
+  cursor: not-allowed;
+}
+
+p {
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.alert {
+  margin: 1em 0;
+  height: 3.8em;
+  padding: 1em 0;
+}
+
+.alert-danger,
+.alert-success {
+  width: 21em;
+  text-align: center;
+}
+
+/* Styling the error messages */
+.error-message {
+  color: red;
+  margin-top: 10px;
+  /* Add more styling as needed */
+}
+
+.error {
+  color: red;
+}
+
+.valid {
+  color: green;
+}
+
+.correct{
+  color: green;
+}
+
+/* Password eye toggle */
+.password-container {
+  position: relative;
+  /* width: 250px;
+  margin: 20px auto; */
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  background-image: url("/img/eye.png");
+  background-size: cover;
+  cursor: pointer;
+}
+
+/* Styling the Password Strength*/
+#password-strength-indicator {
+  /* display: none; */
+  margin-top: 10px;
+}
+
+#password-rules {
+  list-style-type: none;
+  padding: 0;
+  display: none;
+}
+
+#password-rules li {
+  margin-bottom: 5px;
+  color: #666;
+}
+
+progress {
+  width: 100%;
+  /* background: #fff; */
+}
+
+progress::-webkit-progress-value {
+  background-color: red;
+}
+
+progress::-moz-progress-bar {
+  background-color: rgb(0, 252, 42);
+}
+
+progress::-ms-fill {
+  background-color: rgb(0, 255, 55);
+}
+
+progress[value="100"]::-webkit-progress-value,
+progress[value="100"]::-moz-progress-bar,
+progress[value="100"]::-ms-fill {
+  background: green;
+}
+
+/* user strength */
+.user-list{
+  display: grid;
+}
+
+.user-list .user-rule{
+  font-size: 0.8em;
+}
+
+.account{
+  margin: 1.5em 0;
+}
+
+
+/* Styling for mobiles */
+@media only screen and (max-width: 600px) {
+  .form h1 {
+    font-size: 1.8em;
+  }
+  .form input {
+    width: 17em;
+  }
+  .form input:focus {
+    width: 18em;
+  }
+  .form button {
+    width: 17em;
+    height: 3em;
+  }
+  p {
+    font-size: 0.8em;
+    margin: 1.2em 0;
+  }
+  .alert {
+    margin: 1em 0;
+    height: 3.6em;
+    padding: 1em 0;
+  }
+  .alert-danger,
+  .alert-success {
+    width: 17em;
+    height: auto;
+    text-align: center;
+  }
+  body {
+    font-family: "Poppins", sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+  #app {
+    margin: 2em 0;
+    height: 100%;
+  }
+  .user-list{
+    display: grid;
+    margin-left: -1em;
+  }
+  .user-list .user-rule{
+    font-size: 0.7em;
+  }
+  #password-rules li {
+    font-size: 0.8em;
+    margin-bottom: 5px;
+    color: #666;
+  }
+  
+}

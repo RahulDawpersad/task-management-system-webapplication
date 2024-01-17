@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Management System</title>
+  <script src="https://kit.fontawesome.com/655b3b7e45.js" crossorigin="anonymous"></script>
+  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css"> -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div id="app">
+    <form id="addTaskForm">
+      <input type="text" id="taskDescription" placeholder="Add a new task" required>
+      <!-- <button type="submit">Add Task</button> -->
+      <button type="submit" class="addTask">
+        <i class="fa-solid fa-plus"></i>
+    </button>
+    </form>
+    <h3 id="taskList"></h3>
+    <form action="/logout" method="post">
+      <button type="submit">Logout</button>
+    </form>
+  </div>
+  <script src="/js/main.js"></script>
+</body>
+</html>
