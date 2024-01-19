@@ -45,12 +45,7 @@ body {
   border: none;
   border-bottom: 2px solid #000;
   margin: 1.8em 0;
-  transition: 0.2s ease;
-}
-
-.form input:focus {
-/*   width: 21em; */
-  border-bottom: 2px solid #009df8;
+/*   transition: 0.2s ease; */
 }
 
 .form button {
@@ -180,9 +175,6 @@ progress[value="100"]::-ms-fill {
   }
   .form input {
     width: 17em;
-  }
-  .form input:focus {
-    width: 18em;
   }
   .form button {
     width: 17em;
